@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Flappy Baguette 2</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #e0f7f1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    canvas {
+      border: 3px solid #2d6a4f;
+      margin-top: 20px;
+    }
+
+    #restartBtn {
+      display: none;
+      padding: 12px 24px;
+      font-size: 18px;
+      margin-top: 20px;
+      background-color: #2d6a4f;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #restartBtn:hover {
+      background-color: #22543d;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Flappy Baguette 2 🥖</h1>
+
+  <canvas id="gameCanvas" width="720" height="480"></canvas>
+  <button id="restartBtn">🔁 Opnieuw spelen</button>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const restartBtn = document.getElementById("restartBtn");
+
+    let gravity = 0.18;
+    const jump = -8;
+    const pipeWidth = 80;
+    const pipeGapMax = 240;
+    const pipeGapMin = 190;
+    const pipeSpeedIncrement = 0.5;
+
+    let score, highScore = 0, bird, pipes, gameRunning, pipeSpeed = 2, currentPipeGap;
+
+    const birdImg = new Image();
+    birdImg.src = "https://baguettistans.wordpress.com/wp-content/uploads/2025/05/oip.jpg";
+
+    const pipeImg = new Image();
+    pipeImg.src = "https://baguettistans.wordpress.com/wp-content/uploads/2025/05/chjpdmf0zs9sci9pbwfnzxmvd2vic2l0zs8ymdiyltewl2zyzgvzc2vydf9yyxnwymvycmllc193aglwx2nyzwftlwltywdllwpvyjeymdgucg5n.jpg";
+
+    function initGame() {
+      score = 0;
+      currentPipeGap = pipeGapMax;
+      pipeSpeed = 2;
+      gameRunning = true;
+      bird = {
+        x: 120,
+        y: 200,
+        width: 60,
+        height: 45,
+        velocity: 0
+      };
+      pipes = [{ x: canvas.width + 100, offset: Math.random() * 150 - 75 }];
+      restartBtn.style.display = "none";
+      draw();
+    }
+
+    document.addEventListener("keydown", function (e) {
+      if (e.code === "Space") {
+        if (gameRunning) {
+          bird.velocity = jump;
+        } else {
+          initGame();
+        }
+      }
+    });
+
+    restartBtn.addEventListener("click", initGame);
+
+    function gameOver() {
+      gameRunning = false;
+      restartBtn.style.display = "inline-block";
+      highScore = Math.max(highScore, score);
+    }
+
+    function draw() {
+      if (!gameRunning) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+
+      for (let i = 0; i < pipes.length; i++) {
+        const pipeX = pipes[i].x;
+        const offset = pipes[i].offset;
+
+        const gap = currentPipeGap;
+        const topHeight = (canvas.height - gap) / 2 + offset;
+        const bottomY = topHeight + gap;
+        const bottomHeight = canvas.height - bottomY;
+
+        // Teken bovenste en onderste pipes
+        ctx.drawImage(pipeImg, pipeX, 0, pipeWidth, topHeight);
+        ctx.drawImage(pipeImg, pipeX, bottomY, pipeWidth, bottomHeight);
+
+        // Collision
+        if (
+          bird.x < pipeX + pipeWidth &&
+          bird.x + bird.width > pipeX &&
+          (bird.y < topHeight || bird.y + bird.height > bottomY)
+        ) {
+          gameOver();
+          return;
+        }
+
+        pipes[i].x -= pipeSpeed;
+
+        // Nieuwe pipe genereren
+        if (pipeX === 400) {
+          pipes.push({
+            x: canvas.width,
+            offset: Math.random() * 150 - 75
+          });
+        }
+
+        // Score verhogen
+        if (pipeX + pipeWidth === bird.x) {
+          score++;
+
+          if (score % 5 === 0 && currentPipeGap > pipeGapMin) {
+            currentPipeGap -= 5;
+          }
+
+          if (score % 10 === 0) {
+            pipeSpeed += pipeSpeedIncrement;
+          }
+        }
+      }
+
+      // Gravity
+      bird.velocity += gravity;
+      bird.y += bird.velocity;
+
+      if (bird.y > canvas.height || bird.y < 0) {
+        gameOver();
+        return;
+      }
+
+      // Score tonen
+      ctx.fillStyle = "black";
+      ctx.font = "20px Arial";
+      ctx.fillText("Score: " + score, 20, 40);
+      ctx.fillText("High Score: " + highScore, 20, 70);
+
+      requestAnimationFrame(draw);
+    }
+
+    initGame();
+  </script>
+
+</body>
+</html>
