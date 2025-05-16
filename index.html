@@ -38,7 +38,7 @@
 
   <h1>Flappy Baguette 2 🥖</h1>
 
-  <canvas id="gameCanvas" width="720" height="480"></canvas>
+  <canvas id="gameCanvas" width="960" height="640"></canvas>
   <button id="restartBtn">🔁 Opnieuw spelen</button>
 
   <script>
@@ -46,14 +46,14 @@
     const ctx = canvas.getContext("2d");
     const restartBtn = document.getElementById("restartBtn");
 
-    let gravity = 0.18;
-    const jump = -8;
-    const pipeWidth = 80;
-    const pipeGapMax = 240;
-    const pipeGapMin = 190;
+    let gravity = 0.22;
+    const jump = -9;
+    const pipeWidth = 100;
+    const pipeGapMax = 300;
+    const pipeGapMin = 220;
     const pipeSpeedIncrement = 0.5;
 
-    let score, highScore = 0, bird, pipes, gameRunning, pipeSpeed = 2, currentPipeGap;
+    let score, highScore = 0, bird, pipes, gameRunning, pipeSpeed = 2.2, currentPipeGap;
 
     const birdImg = new Image();
     birdImg.src = "https://baguettistans.wordpress.com/wp-content/uploads/2025/05/oip.jpg";
@@ -64,16 +64,16 @@
     function initGame() {
       score = 0;
       currentPipeGap = pipeGapMax;
-      pipeSpeed = 2;
+      pipeSpeed = 2.2;
       gameRunning = true;
       bird = {
-        x: 120,
-        y: 200,
+        x: 160,
+        y: 300,
         width: 60,
         height: 45,
         velocity: 0
       };
-      pipes = [{ x: canvas.width + 100, offset: Math.random() * 150 - 75 }];
+      pipes = [{ x: canvas.width + 100, offset: Math.random() * 200 - 100 }];
       restartBtn.style.display = "none";
       draw();
     }
@@ -111,7 +111,6 @@
         const bottomY = topHeight + gap;
         const bottomHeight = canvas.height - bottomY;
 
-        // Teken bovenste en onderste pipes
         ctx.drawImage(pipeImg, pipeX, 0, pipeWidth, topHeight);
         ctx.drawImage(pipeImg, pipeX, bottomY, pipeWidth, bottomHeight);
 
@@ -127,15 +126,13 @@
 
         pipes[i].x -= pipeSpeed;
 
-        // Nieuwe pipe genereren
-        if (pipeX === 400) {
+        if (pipeX === 600) {
           pipes.push({
             x: canvas.width,
-            offset: Math.random() * 150 - 75
+            offset: Math.random() * 200 - 100
           });
         }
 
-        // Score verhogen
         if (pipeX + pipeWidth === bird.x) {
           score++;
 
@@ -149,7 +146,6 @@
         }
       }
 
-      // Gravity
       bird.velocity += gravity;
       bird.y += bird.velocity;
 
@@ -158,9 +154,8 @@
         return;
       }
 
-      // Score tonen
       ctx.fillStyle = "black";
-      ctx.font = "20px Arial";
+      ctx.font = "22px Arial";
       ctx.fillText("Score: " + score, 20, 40);
       ctx.fillText("High Score: " + highScore, 20, 70);
 
