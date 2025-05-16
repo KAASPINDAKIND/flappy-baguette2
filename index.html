@@ -258,34 +258,23 @@
       pipes.shift();
       const lastX = pipes.length > 0 ? pipes[pipes.length - 1].x : canvas.width;
       pipes.push({
-        x: last
+        x: lastX + 400,
+        offset: Math.random() * 200 - 100,
+        passed: false,
+      });
+    }
 
-X + 400,
-offset: Math.random() * 200 - 100,
-passed: false,
-});
-}
+    bird.velocity += gravity;
+    bird.y += bird.velocity;
 
-arduino
-Kopiëren
-Bewerken
-bird.velocity += gravity;
-bird.y += bird.velocity;
+    if (bird.y > canvas.height || bird.y < 0) {
+      gameOver();
+      return;
+    }
 
-if (bird.y > canvas.height || bird.y < 0) {
-  gameOver();
-  return;
-}
+    ctx.fillStyle = "black";
+    ctx.font = "22px Arial";
+    ctx.fillText("Score: " + score, 20, 40);
+    ctx.fillText("High Score: " + highScore, 20, 70);
 
-ctx.fillStyle = "black";
-ctx.font = "22px Arial";
-ctx.fillText("Score: " + score, 20, 40);
-ctx.fillText("High Score: " + highScore, 20, 70);
-
-requestAnimationFrame(draw);
-}
-
-resetGame();
-</script>
-
-</body> </html>
+    requestAnimationFrame(draw);
