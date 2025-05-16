@@ -1,234 +1,298 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <title>Flappy Baguette</title>
-  <style>
-    body {
-      margin: 0;
-      background-color: #e0f7f1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      font-family: Arial, sans-serif;
-    }
-    canvas {
-      border: 3px solid #2d6a4f;
-      margin-top: 20px;
-      background-color: #caf0f8;
-      display: block;
-    }
-    #restartBtn {
-      display: none;
-      padding: 12px 24px;
-      font-size: 18px;
-      margin-top: 20px;
-      background-color: #2d6a4f;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    #restartBtn:hover {
-      background-color: #22543d;
-    }
-    #cheatsBtn {
-      padding: 10px 20px;
-      font-size: 16px;
-      margin: 10px 5px;
-      background-color: #1a7c65;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Flappy Baguette 2 🥖</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+    background-color: #e0f7f1;
+  }
+  h1 {
+    margin-top: 10px;
+    color: #2d6a4f;
+  }
+  canvas {
+    margin-top: 10px;
+    border: 3px solid #2d6a4f;
+    background-color: #caf0f8;
+    border-radius: 12px;
+    display: block;
+  }
+  button {
+    margin-top: 10px;
+    padding: 12px 24px;
+    font-size: 16px;
+    background-color: #2d6a4f;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #22543d;
+  }
+  /* Cheats en sliders container linksboven */
+  #cheatsContainer {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: #d9f0e8;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 1000;
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  #cheatsBtn {
+    margin: 0;
+    font-size: 14px;
+    padding: 10px 20px;
+  }
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+  .control-group {
+    display: flex;
+    flex-direction: column;
+  }
+  .control-group label {
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: #2d6a4f;
+  }
+  .control-group input[type="range"] {
+    width: 100%;
+  }
+  .control-group span {
+    font-size: 14px;
+    color: #333;
+  }
+</style>
 </head>
 <body>
-  <h1>Flappy Baguette 2 🥖</h1>
 
+  <div id="cheatsContainer">
+    <button id="cheatsBtn">Cheats OFF</button>
+
+    <div class="controls">
+      <div class="control-group">
+        <label for="gravitySlider">Gravity: <span id="gravityValue">0.22</span></label>
+        <input type="range" id="gravitySlider" min="0.01" max="1" step="0.01" value="0.22">
+      </div>
+      <div class="control-group">
+        <label for="jumpSlider">Jump (negatief): <span id="jumpValue">-8</span></label>
+        <input type="range" id="jumpSlider" min="-30" max="-1" step="0.1" value="-8">
+      </div>
+      <div class="control-group">
+        <label for="speedSlider">Pipe Speed: <span id="speedValue">2.2</span></label>
+        <input type="range" id="speedSlider" min="1" max="10" step="0.1" value="2.2">
+      </div>
+      <div class="control-group">
+        <label for="gapSlider">Gatgrootte: <span id="gapValue">300</span></label>
+        <input type="range" id="gapSlider" min="100" max="600" step="1" value="300">
+      </div>
+    </div>
+  </div>
+
+  <h1>Flappy Baguette 2 🥖</h1>
   <canvas id="gameCanvas" width="960" height="640"></canvas>
   <button id="restartBtn">🔁 Opnieuw spelen</button>
-  <button id="cheatsBtn">Cheats OFF</button>
 
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const restartBtn = document.getElementById("restartBtn");
-    const cheatsBtn = document.getElementById("cheatsBtn");
+<script>
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
 
-    // Game variables (let zodat je ze kunt aanpassen)
-    let gravity = 0.22;
-    let jump = -8;
-    const pipeWidth = 100;
-    const pipeGapMax = 300;
-    const pipeGapMin = 220;
-    const pipeSpeedIncrement = 0.5;
+  const gravitySlider = document.getElementById("gravitySlider");
+  const jumpSlider = document.getElementById("jumpSlider");
+  const speedSlider = document.getElementById("speedSlider");
+  const gapSlider = document.getElementById("gapSlider");
 
-    let score = 0;
-    let highScore = 0;
-    let bird;
-    let pipes = [];
-    let gameRunning = false;
-    let pipeSpeed = 2.2;
-    let currentPipeGap = pipeGapMax;
+  const gravityValue = document.getElementById("gravityValue");
+  const jumpValue = document.getElementById("jumpValue");
+  const speedValue = document.getElementById("speedValue");
+  const gapValue = document.getElementById("gapValue");
 
-    const birdImg = new Image();
-    birdImg.src = "https://baguettistans.wordpress.com/wp-content/uploads/2025/05/oip.jpg";
+  const restartBtn = document.getElementById("restartBtn");
+  const cheatsBtn = document.getElementById("cheatsBtn");
 
-    const pipeImg = new Image();
-    pipeImg.src = "https://baguettistans.wordpress.com/wp-content/uploads/2025/05/chjpdmf0zs9sci9pbwfnzxmvd2vic2l0zs8ymdiyltewl2zyzgvzc2vydf9yyxnwymvycmllc193aglwx2nyzwftlwltywdllwpvyjeymdgucg5n.jpg";
+  let gravity, jump, pipeSpeed, currentPipeGap;
+  let score = 0, highScore = 0;
+  let bird, pipes = [];
+  let gameRunning = false;
+  const pipeWidth = 100;
 
-    let cheatsActive = false;
+  const birdImg = new Image();
+  birdImg.src = "https://baguettistans.wordpress.com/wp-content/uploads/2025/05/oip.jpg";
 
-    function resetGame() {
-      score = 0;
-      pipeSpeed = 2.2;
-      currentPipeGap = pipeGapMax;
-      bird = {
-        x: 160,
-        y: 300,
-        width: 60,
-        height: 45,
-        velocity: 0,
-      };
-      pipes = [];
+  const pipeImg = new Image();
+  pipeImg.src = "https://baguettistans.wordpress.com/wp-content/uploads/2025/05/chjpdmf0zs9sci9pbwfnzxmvd2vic2l0zs8ymdiyltewl2zyzgvzc2vydf9yyxnwymvycmvycmllc193aglwx2nyzwftlwltywdllwpvyjeymdgucg5n.jpg";
 
-      // Start met 3 pipes, netjes verspreid over het speelveld
-      const spacing = 400;
-      for(let i = 0; i < 3; i++) {
-        pipes.push({
-          x: canvas.width + i * spacing,
-          offset: Math.random() * 200 - 100,
-          passed: false // om score correct te tellen
-        });
-      }
-      gameRunning = true;
-      restartBtn.style.display = "none";
-      draw();
-    }
+  function updateValuesFromSliders() {
+    gravity = parseFloat(gravitySlider.value);
+    jump = parseFloat(jumpSlider.value);
+    pipeSpeed = parseFloat(speedSlider.value);
+    currentPipeGap = parseFloat(gapSlider.value);
 
-    document.addEventListener("keydown", e => {
-      if(e.code === "Space") {
-        if(gameRunning) {
-          bird.velocity = jump;
-        } else {
-          resetGame();
-        }
-      }
-    });
+    gravityValue.textContent = gravity.toFixed(2);
+    jumpValue.textContent = jump.toFixed(1);
+    speedValue.textContent = pipeSpeed.toFixed(1);
+    gapValue.textContent = currentPipeGap.toFixed(0);
+  }
 
-    restartBtn.addEventListener("click", resetGame);
+  gravitySlider.addEventListener("input", updateValuesFromSliders);
+  jumpSlider.addEventListener("input", updateValuesFromSliders);
+  speedSlider.addEventListener("input", updateValuesFromSliders);
+  gapSlider.addEventListener("input", updateValuesFromSliders);
 
-    cheatsBtn.addEventListener("click", function () {
-      cheatsActive = !cheatsActive;
-      cheatsBtn.textContent = cheatsActive ? "Cheats ON" : "Cheats OFF";
+  function resetGame() {
+    updateValuesFromSliders();
 
-      if (cheatsActive) {
-        // Hier kun je zelf de cheats aanpassen
-        gravity = 0.1;
-        jump = -12;
-        pipeSpeed = 1;
-        currentPipeGap = 400;
-      } else {
-        // Normale instellingen terugzetten
-        gravity = 0.22;
-        jump = -8;
-        pipeSpeed = 2.2;
-        currentPipeGap = pipeGapMax;
-      }
-    });
+    score = 0;
+    bird = {
+      x: 160,
+      y: 300,
+      width: 60,
+      height: 45,
+      velocity: 0,
+    };
+    pipes = [];
 
-    function gameOver() {
-      gameRunning = false;
-      restartBtn.style.display = "inline-block";
-      if(score > highScore) highScore = score;
-    }
-
-    function draw() {
-      if(!gameRunning) return;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Teken vogel
-      ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
-
-      // Pipes tekenen en bewegen
-      pipes.forEach(pipe => {
-        const gap = currentPipeGap;
-        const topHeight = (canvas.height - gap) / 2 + pipe.offset;
-        const bottomY = topHeight + gap;
-        const bottomHeight = canvas.height - bottomY;
-
-        // Bovenste pipe
-        ctx.drawImage(pipeImg, pipe.x, 0, pipeWidth, topHeight);
-        // Onderste pipe
-        ctx.drawImage(pipeImg, pipe.x, bottomY, pipeWidth, bottomHeight);
-
-        // Botst met vogel?
-        if (
-          bird.x < pipe.x + pipeWidth &&
-          bird.x + bird.width > pipe.x &&
-          (bird.y < topHeight || bird.y + bird.height > bottomY)
-        ) {
-          gameOver();
-          return;
-        }
-
-        // Pipe bewegen
-        pipe.x -= pipeSpeed;
-
-        // Score tellen als bird langs pipe is
-        if(!pipe.passed && pipe.x + pipeWidth < bird.x) {
-          pipe.passed = true;
-          score++;
-
-          // Gat kleiner maken elke 5 punten, minimaal pipeGapMin
-          if(score % 5 === 0 && currentPipeGap > pipeGapMin) {
-            currentPipeGap -= 5;
-          }
-
-          // Versnellen elke 10 punten
-          if(score % 10 === 0) {
-            pipeSpeed += pipeSpeedIncrement;
-          }
-        }
+    for (let i = 0; i < 3; i++) {
+      pipes.push({
+        x: canvas.width + i * 400,
+        offset: Math.random() * 200 - 100,
+        passed: false,
       });
+    }
 
-      // Verwijder pipes die uit beeld zijn en voeg nieuwe toe
-      if(pipes.length > 0 && pipes[0].x + pipeWidth < 0) {
-        pipes.shift();
-        const lastX = pipes.length > 0 ? pipes[pipes.length - 1].x : canvas.width;
-        pipes.push({
-          x: lastX + 400,
-          offset: Math.random() * 200 - 100,
-          passed: false,
-        });
+    gameRunning = true;
+    restartBtn.style.display = "none";
+    draw();
+  }
+
+  document.addEventListener("keydown", e => {
+    if (e.code === "Space") {
+      if (gameRunning) {
+        bird.velocity = jump;
+      } else {
+        resetGame();
       }
+    }
+  });
 
-      // Gravity toepassen op vogel
-      bird.velocity += gravity;
-      bird.y += bird.velocity;
+  restartBtn.addEventListener("click", resetGame);
 
-      // Buiten het scherm = game over
-      if(bird.y > canvas.height || bird.y < 0) {
+  let cheatsOn = false;
+
+  cheatsBtn.addEventListener("click", () => {
+    cheatsOn = !cheatsOn;
+    cheatsBtn.textContent = cheatsOn ? "Cheats ON" : "Cheats OFF";
+
+    if (cheatsOn) {
+      gravitySlider.value = 0.05;
+      jumpSlider.value = -16;
+      speedSlider.value = 6;
+      gapSlider.value = 500;
+    } else {
+      gravitySlider.value = 0.22;
+      jumpSlider.value = -8;
+      speedSlider.value = 2.2;
+      gapSlider.value = 300;
+    }
+    updateValuesFromSliders();
+  });
+
+  function gameOver() {
+    gameRunning = false;
+    restartBtn.style.display = "inline-block";
+    if (score > highScore) highScore = score;
+  }
+
+  function draw() {
+    if (!gameRunning) return;
+
+    updateValuesFromSliders();
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+
+    pipes.forEach(pipe => {
+      const gap = currentPipeGap;
+      const topHeight = (canvas.height - gap) / 2 + pipe.offset;
+      const bottomY = topHeight + gap;
+      const bottomHeight = canvas.height - bottomY;
+
+      ctx.drawImage(pipeImg, pipe.x, 0, pipeWidth, topHeight);
+      ctx.drawImage(pipeImg, pipe.x, bottomY, pipeWidth, bottomHeight);
+
+      if (
+        bird.x < pipe.x + pipeWidth &&
+        bird.x + bird.width > pipe.x &&
+        (bird.y < topHeight || bird.y + bird.height > bottomY)
+      ) {
         gameOver();
         return;
       }
 
-      // Score en Highscore tonen linksboven
-      ctx.fillStyle = "black";
-      ctx.font = "22px Arial";
-      ctx.fillText("Score: " + score, 20, 40);
-      ctx.fillText("High Score: " + highScore, 20, 70);
+      pipe.x -= pipeSpeed;
 
-      requestAnimationFrame(draw);
+      if (!pipe.passed && pipe.x + pipeWidth < bird.x) {
+        pipe.passed = true;
+        score++;
+      }
+    });
+
+    if (pipes.length > 0 && pipes[0].x + pipeWidth < 0) {
+      pipes.shift();
+      const lastX = pipes.length > 0 ? pipes[pipes.length - 1].x : canvas.width;
+      pipes.push({
+        x: lastX + 400,
+        offset: Math.random() * 200 - 100,
+        passed: false,
+      });
     }
 
-    resetGame();
-  </script>
+    bird.velocity += gravity;
+    bird.y += bird.velocity;
 
-  <!-- Achtergrondmuziek -->
-  <audio id="bgMusic" src="https://cdn.pixabay.com/download/audio/2022/03/25/audio_6a209cfa07.mp3?filename=happy-ukulele-6239.mp3" loop autoplay></audio>
+    if (bird.y > canvas.height || bird.y < 0) {
+      gameOver();
+      return;
+    }
+
+    ctx.fillStyle =
+
+
+
+
+
+
+ChatGPT zei:
+"black";
+ctx.font = "22px Arial";
+ctx.fillText("Score: " + score, 20, 40);
+ctx.fillText("High Score: " + highScore, 20, 70);
+
+scss
+Kopiëren
+Bewerken
+requestAnimationFrame(draw);
+}
+
+resetGame();
+</script>
+
 </body>
 </html>
