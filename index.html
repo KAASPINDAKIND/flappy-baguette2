@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>Flappy Baguette 2 🥖</title>
   <style>
-    /* [Jouw bestaande CSS blijft hetzelfde] */
     html, body { margin: 0; padding: 0; height: 100%; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; user-select: none; background-color: #e0f7f1; }
     h1 { margin-top: 10px; color: #2d6a4f; }
     canvas { margin-top: 10px; border: 3px solid #2d6a4f; background-color: #caf0f8; border-radius: 12px; display: block; }
@@ -74,7 +73,7 @@ const birdImg = new Image();
 birdImg.src = "https://baguettistans.wordpress.com/wp-content/uploads/2025/05/oip.jpg";
 
 const pipeImg = new Image();
-pipeImg.src = "https://baguettistans.wordpress.com/wp-content/uploads/2025/05/chjpdmf0zs9sci9pbwfnzxmvd2vic2l0zs8ymdiyltewl2zyzgvzc2vydf9yyxnwymvycmllc193aglwx2nyzwftlwltywdllwpvyjeymdgucg5n.jpg"; // Vervang dit door je eigen afbeelding indien gewenst
+pipeImg.src = "https://baguettistans.wordpress.com/wp-content/uploads/2025/05/chjpdmf0zs9sci9pbwfnzxmvd2vic2l0zs8ymdiyltewl2zyzgvzc2vydf9yyxnwymvycmllc193aglwx2nyzwftlwltywdllwpvyjeymdgucg5n.jpg";
 
 function updateValuesFromSliders() {
   gravity = parseFloat(gravitySlider.value);
@@ -96,6 +95,7 @@ gapSlider.addEventListener("input", updateValuesFromSliders);
 function resetGame() {
   updateValuesFromSliders();
   score = 0;
+  pipeSpeed = parseFloat(speedSlider.value);
   bird = {
     x: 160,
     y: 300,
@@ -108,14 +108,14 @@ function resetGame() {
   for (let i = 0; i < 3; i++) {
     pipes.push({
       x: canvas.width + i * 400,
-      offset: Math.random() * 200 - 100,
+      offset: Math.random() * (canvas.height - currentPipeGap),
       passed: false,
     });
   }
 
   gameRunning = true;
   restartBtn.style.display = "none";
-  loop(); // start game loop
+  loop();
 }
 
 document.addEventListener("keydown", e => {
@@ -158,12 +158,12 @@ function draw() {
 
   pipes.forEach(pipe => {
     const gap = currentPipeGap;
-    const topHeight = (canvas.height - gap) / 2 + pipe.offset;
+    const topHeight = Math.max(0, pipe.offset);
     const bottomY = topHeight + gap;
-    const bottomHeight = canvas.height - bottomY;
+    const bottomHeight = Math.max(0, canvas.height - bottomY);
 
-    ctx.drawImage(pipeImg, pipe.x, 0, pipeWidth, topHeight);
-    ctx.drawImage(pipeImg, pipe.x, bottomY, pipeWidth, bottomHeight);
+    if (topHeight > 0) ctx.drawImage(pipeImg, pipe.x, 0, pipeWidth, topHeight);
+    if (bottomHeight > 0) ctx.drawImage(pipeImg, pipe.x, bottomY, pipeWidth, bottomHeight);
 
     if (
       bird.x < pipe.x + pipeWidth &&
@@ -178,6 +178,10 @@ function draw() {
     if (!pipe.passed && pipe.x + pipeWidth < bird.x) {
       pipe.passed = true;
       score++;
+
+      if (score % 5 === 0) {
+        pipeSpeed += 0.3;
+      }
     }
   });
 
@@ -186,7 +190,7 @@ function draw() {
     const lastX = pipes[pipes.length - 1].x;
     pipes.push({
       x: lastX + 400,
-      offset: Math.random() * 200 - 100,
+      offset: Math.random() * (canvas.height - currentPipeGap),
       passed: false,
     });
   }
