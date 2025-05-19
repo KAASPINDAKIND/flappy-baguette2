@@ -78,8 +78,11 @@ pipeImg.src = "https://baguettistans.wordpress.com/wp-content/uploads/2025/05/ch
 function updateValuesFromSliders() {
   gravity = parseFloat(gravitySlider.value);
   jump = parseFloat(jumpSlider.value);
-  pipeSpeed = parseFloat(speedSlider.value);
   currentPipeGap = parseFloat(gapSlider.value);
+
+  if (!gameRunning) {
+    pipeSpeed = parseFloat(speedSlider.value);
+  }
 
   gravityValue.textContent = gravity.toFixed(2);
   jumpValue.textContent = jump.toFixed(1);
@@ -95,7 +98,6 @@ gapSlider.addEventListener("input", updateValuesFromSliders);
 function resetGame() {
   updateValuesFromSliders();
   score = 0;
-  pipeSpeed = parseFloat(speedSlider.value);
   bird = {
     x: 160,
     y: 300,
@@ -151,8 +153,6 @@ function gameOver() {
 }
 
 function draw() {
-  updateValuesFromSliders();
-
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
 
